@@ -1,0 +1,52 @@
+name: Build Hikari Intel Toolchain
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install tools
+        run: brew install cmake ninja
+
+      - name: Configure
+        run: |
+          mkdir build && cd build
+          cmake -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+            -DLLVM_ENABLE_PROJECTS="clang;lld" \
+            -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64" \
+            -DLLVM_ENABLE_ZSTD=OFF \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
+            -DLLVM_CREATE_XCODE_TOOLCHAIN=ON \
+            -DLLVM_INCLUDE_TESTS=OFF \
+            -DLLVM_INCLUDE_EXAMPLES=OFF \
+            -DLLVM_INCLUDE_UTILS=OFF \
+            -DLLVM_INCLUDE_BENCHMARKS=OFF \
+            -DLLVM_BUILD_TOOLS=OFF \
+            -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
+            -DCMAKE_INSTALL_PREFIX="$HOME/Library/Developer" \
+            ../llvm
+
+      - name: Build
+        run: cd build && ninja
+
+      - name: Install toolchain
+        run: cd build && ninja install-xcode-toolchain
+
+      - name: Zip toolchain
+        run: |
+          cd ~/Library/Developer/Toolchains
+          zip -ry Hikari.xctoolchain.zip Hikari.xctoolchain
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hikari-Intel-xctoolchain
+          path: ~/Library/Developer/Toolchains/Hikari.xctoolchain.zip
