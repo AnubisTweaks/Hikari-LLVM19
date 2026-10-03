@@ -53,4 +53,7 @@ jobs:
           zip -ry ~/Hikari.xctoolchain.zip Hikari.xctoolchain
 
       - name: Upload
-        uses:
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hikari-Intel-xctoolchain
+          path: ~/Hikari.xctoolchain.zip
