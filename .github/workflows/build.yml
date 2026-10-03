@@ -40,13 +40,17 @@ jobs:
       - name: Install toolchain
         run: cd build && ninja install-xcode-toolchain
 
-      - name: Zip toolchain
+      - name: Package toolchain
         run: |
           cd ~/Library/Developer/Toolchains
-          zip -ry Hikari.xctoolchain.zip Hikari.xctoolchain
+          echo "=== Contents of Toolchains ==="
+          ls -la
+          TC=$(ls -d *.xctoolchain | head -n1)
+          echo "=== Found toolchain: $TC ==="
+          if [ "$TC" != "Hikari.xctoolchain" ]; then
+            cp -R "$TC" Hikari.xctoolchain
+          fi
+          zip -ry ~/Hikari.xctoolchain.zip Hikari.xctoolchain
 
       - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: Hikari-Intel-xctoolchain
-          path: ~/Library/Developer/Toolchains/Hikari.xctoolchain.zip
+        uses:
